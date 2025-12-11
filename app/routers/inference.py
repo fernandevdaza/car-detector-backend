@@ -36,6 +36,7 @@ async def infer_car_with_image(
     lon: Annotated[Optional[float], Form()] = None,
     source_video_id: Annotated[Optional[str], Form()] = None,
 ):
+    print(f"Latitud {lat} y Longitud {lon}")
     filename = (file.filename or "").lower()
     content_type = (file.content_type or "").lower().strip()
 

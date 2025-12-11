@@ -86,6 +86,8 @@ class CreateUserRequest(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    user_id: str
+    role: str
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
@@ -114,5 +116,4 @@ async def login_for_access_token(
         )
 
     token = create_access_token(user.email, user.id, user.role, timedelta(minutes=20))
-
-    return {"access_token": token, "token_type": "bearer"}
+    return {"access_token": token, "token_type": "bearer", "user_id": f"{user.id}", "role": user.role}
