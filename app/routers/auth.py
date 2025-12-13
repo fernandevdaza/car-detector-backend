@@ -88,6 +88,9 @@ class Token(BaseModel):
     token_type: str
     user_id: str
     role: str
+    email: str
+    first_name: str
+    last_name: str
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
@@ -116,4 +119,42 @@ async def login_for_access_token(
         )
 
     token = create_access_token(user.email, user.id, user.role, timedelta(minutes=20))
-    return {"access_token": token, "token_type": "bearer", "user_id": f"{user.id}", "role": user.role}
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user_id": f"{user.id}",
+        "role": user.role,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+    }
+
+
+class UpdateUserRequest(BaseModel):
+    email: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+
+
+@router.put("/me", status_code=status.HTTP_200_OK)
+async def update_user(
+    user: Annotated[dict, Depends(get_current_user)],
+    db: db_dependency,
+    update_request: UpdateUserRequest,
+):
+    user_model = db.query(Users).filter(Users.id == user.get("id")).first()
+    if not user_model:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found."
+        )
+
+    if update_request.email is not None:
+        user_model.email = update_request.email
+    if update_request.first_name is not None:
+        user_model.first_name = update_request.first_name
+    if update_request.last_name is not None:
+        user_model.last_name = update_request.last_name
+
+    db.add(user_model)
+    db.commit()
+    return {"message": "User updated successfully"}
